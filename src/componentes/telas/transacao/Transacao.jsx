@@ -8,8 +8,12 @@ import {
 import Tabela from "./Tabela";
 import Form from "./Form";
 import Carregando from "../../comuns/Carregando";
+import WithAuth from "../../../seguranca/WithAuth";
+import { useNavigate } from "react-router-dom";
 
 function Transacao() {
+
+    let navigate = useNavigate();
 
     const [alerta, setAlerta] = useState({ status: "", message: "" });
     const [listaObjetos, setListaObjetos] = useState([]);
@@ -17,7 +21,7 @@ function Transacao() {
     const [editar, setEditar] = useState(false);
     const [objeto, setObjeto] = useState({
         codigo: "", especificacao: "",
-        valor: "", data_transacao: new Date().toISOString().slice(0, 10), 
+        valor: "", data_transacao: new Date().toISOString().slice(0, 10),
         categorias: []
     });
 
@@ -32,9 +36,15 @@ function Transacao() {
     }
 
     const editarObjeto = async codigo => {
-        setObjeto(await getTransacaoPorCodigoAPI(codigo));
-        setEditar(true);
-        setAlerta({ status: "", message: "" });
+        try {
+            setObjeto(await getTransacaoPorCodigoAPI(codigo));
+            setEditar(true);
+            setAlerta({ status: "", message: "" });
+        } catch (err) {
+            window.location.reload();
+            navigate("login", { replace: true });
+
+        }
     }
 
     const acaoCadastrar = async e => {
@@ -49,6 +59,8 @@ function Transacao() {
             }
         } catch (err) {
             console.log(err);
+            window.location.reload();
+            navigate("login", { replace: true });
         }
         recuperaTransacoes();
     }
@@ -62,20 +74,35 @@ function Transacao() {
     const [carregando, setCarregando] = useState(false);
 
     const recuperaTransacoes = async () => {
-        setCarregando(true);
-        setListaObjetos(await getTransacoesAPI());
-        setCarregando(false);
+        try {
+            setCarregando(true);
+            setListaObjetos(await getTransacoesAPI());
+            setCarregando(false);
+        } catch (err) {
+            window.location.reload();
+            navigate("login", { replace: true });
+        }
     }
 
     const recuperaCategorias = async () => {
-        setListaCategorias(await getCategoriasAPI());
+        try {
+            setListaCategorias(await getCategoriasAPI());
+        } catch (err) {
+            window.location.reload();
+            navigate("login", { replace: true });
+        }
     }
 
     const remover = async codigo => {
         if (window.confirm('Deseja remover este objeto?')) {
-            let retornoAPI = await deleteTransacaoAPI(codigo);
-            setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
-            recuperaTransacoes();
+            try {
+                let retornoAPI = await deleteTransacaoAPI(codigo);
+                setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+                recuperaTransacoes();
+            } catch (err) {
+                window.location.reload();
+                navigate("login", { replace: true });
+            }
         }
     }
 
@@ -101,4 +128,4 @@ function Transacao() {
 
 }
 
-export default Transacao;
+export default WithAuth(Transacao);

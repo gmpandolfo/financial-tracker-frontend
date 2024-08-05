@@ -7,8 +7,12 @@ import {
 import Tabela from "./Tabela";
 import Form from "./Form";
 import Carregando from "../../comuns/Carregando";
+import WithAuth from "../../../seguranca/WithAuth";
+import { useNavigate } from "react-router-dom";
 
 function Categoria() {
+
+    let navigate = useNavigate();
 
     const [alerta, setAlerta] = useState({ status: "", message: "" });
     const [listaObjetos, setListaObjetos] = useState([]);
@@ -25,9 +29,14 @@ function Categoria() {
     }
 
     const editarObjeto = async codigo => {
-        setObjeto(await getCategoriaPorCodigoAPI(codigo));
-        setEditar(true);
-        setAlerta({ status: "", message: "" });
+        try{
+            setObjeto(await getCategoriaPorCodigoAPI(codigo));
+            setEditar(true);
+            setAlerta({ status: "", message: "" });
+        } catch (err) {
+            window.location.reload();
+            navigate("login", { replace: true });
+        }
     }
 
     const acaoCadastrar = async e => {
@@ -42,6 +51,8 @@ function Categoria() {
             }
         } catch (err) {
             console.log(err);
+            window.location.reload();
+            navigate("login", { replace: true });
         }
         recuperaCategorias();
     }
@@ -55,16 +66,26 @@ function Categoria() {
     const [carregando, setCarregando] = useState(false);
 
     const recuperaCategorias = async () => {
-        setCarregando(true);
-        setListaObjetos(await getCategoriasAPI());
-        setCarregando(false);
+        try {
+            setCarregando(true);
+            setListaObjetos(await getCategoriasAPI());
+            setCarregando(false);
+        } catch (err) {
+            window.location.reload();
+            navigate("login", { replace: true });
+        }
     }
 
     const remover = async codigo => {
         if (window.confirm('Deseja remover este objeto?')) {
-            let retornoAPI = await deleteCategoriaAPI(codigo);
-            setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
-            recuperaCategorias();
+            try {
+                let retornoAPI = await deleteCategoriaAPI(codigo);
+                setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+                recuperaCategorias();
+            } catch (err) {
+                window.location.reload();
+                navigate("login", { replace: true });
+            }
         }
     }
 
@@ -88,4 +109,4 @@ function Categoria() {
 
 }
 
-export default Categoria;
+export default WithAuth(Categoria);
